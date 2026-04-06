@@ -1,12 +1,21 @@
 # CNN Classification Model for Plant Leaf Diseases
 
-## 1. Install Dependencies
+## 1. Steps to Approach This Objective
+To build a highly robust plant leaf disease classification model, follow this structured approach:
+1. **Understand and Define the Goal:** The model must identify both the crop species and the exact pathology. By mapping each sub-folder directly to a distinct category (39 classes total), one model achieves both objectives.
+2. **Environment & Hardware Setup:** Install deep learning frameworks (TensorFlow/Keras) and allocate GPU acceleration for rapid image processing.
+3. **Data Loading & Preprocessing:** Point a script to the image dataset. Resize all images uniformly (e.g., 256x256), normalize pixel intensity (values scaled to 0-1), and split the data—80% for training model parameters, and 20% to validate its success on unseen data.
+4. **Architect the CNN:** Design a custom Convolutional Neural Network that can recognize granular shapes, textures, and colorful blights.
+5. **Compile & Train:** Select an appropriate optimizer (like Adam) and loss function (categorical crossentropy) to repeatedly train the model until accuracy peaks.
+6. **Evaluate & Save:** Measure performance on the validation split. Re-adjust hyperparameters if underperforming, then export the model.
+
+## 2. Install Dependencies
 Before running any code, you need to install TensorFlow. Run the following command in your Python environment or terminal:
 ```bash
 pip install tensorflow
 ```
 
-## 2. Using GPU for Maximum Performance
+## 3. Using GPU for Maximum Performance
 To ensure maximum use of your GPU during training, TensorFlow will automatically utilize available GPUs. You can verify GPU availability and configure dynamic memory allocation to prevent out-of-memory errors:
 
 ```python
@@ -25,11 +34,18 @@ if physical_devices:
         print(e)
 ```
 
-## 3. Dataset Context
+## 4. Dataset Context
 Please refer to the [Dataset_Analysis.md](../Dataset_Analysis.md) file to understand the dataset structure. The dataset contains 39 distinct classes covering 14 crop species and their various diseases, healthy states, and a backgound class.
 
-## 4. How to Make a CNN Model
-A Convolutional Neural Network (CNN) is built by stacking Convolutional layers (to extract visual features like leaf textures, spots, and discolorations), MaxPooling layers (to condense information), and Dense layers (to perform the final classification).
+## 5. Steps to Make a CNN Model
+A Convolutional Neural Network (CNN) is uniquely structured to process images. Here are the core steps to build it:
+- **Step 1:** Initialize a `Sequential` model (meaning layers are stacked sequentially).
+- **Step 2 (Convolution):** Add `Conv2D` layers. These act as visual filters that scan over the leaf image to identify textures, spot shapes, and discoloration.
+- **Step 3 (Pooling):** Add `MaxPooling2D` layers after convolutions. This shrinks the image matrix, reducing heavy computation while preserving the most prominent visual features.
+- **Step 4 (Flatten):** Add a `Flatten` layer to convert 2D image matrices into a flat 1D statistical array so standard neural nodes can process it.
+- **Step 5 (Dense/Fully Connected):** Add `Dense` layers where the model mathematically weighs evidence of various features.
+- **Step 6 (Output):** The final `Dense` layer must use the `softmax` activation and contain exactly as many nodes as there are classes (39 endpoints).
+- **Step 7 (Compile):** Compile the final architecture using an optimizer, a loss metric, and accuracy tracking.
 
 ```python
 from tensorflow.keras import layers, models
