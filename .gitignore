@@ -1,1 +1,11 @@
 DATASET/
+*.pt
+*.pth
+*.keras
+*.h5
+*.weights
+__pycache__/
+.ipynb_checkpoints/
+.gemini/
+.vscode/
+*.log
