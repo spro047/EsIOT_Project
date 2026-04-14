@@ -59,7 +59,7 @@ cells.append(create_markdown_cell([
 ]))
 
 cells.append(create_code_cell([
-    "DATASET_DIR = '../DATASET/Original'",
+    "DATASET_DIR = '../DATASET/Augmentated/Plant_leave_diseases_dataset_with_augmentation'",
     "",
     "class_counts = {}",
     "for count_dir in os.listdir(DATASET_DIR):",
