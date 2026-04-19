@@ -7,6 +7,13 @@ This report presents the real-time inference results of the deep learning model 
 - **Device**: GPU (`cuda`)
 - **Evaluation Criteria**: The model evaluates one known *diseased* leaf and one known *healthy* leaf, returning its classification prediction.
 
+## Dataset Splitting Strategy
+To ensure the model generalizes well and maintains class balance, the plant disease dataset was split into training and validation subsets using a **stratified 80/20 ratio**:
+1.  **Full Dataset Loading**: The images were indexed from the `DATASET` directory using `torchvision.datasets.ImageFolder`.
+2.  **Stratified Split (Per-Folder Distribution)**: We transitioned from a global random shuffle to a **stratified split** using `sklearn.model_selection.train_test_split`. This ensures that exactly **80% of the images in EACH folder** (diseased and healthy) are allocated for training, while the remaining **20%** of each folder are reserved for validation. This prevents bias and ensures that rare classes are equally represented in both sets.
+3.  **Reproducibility**: A specific random state (`123`) was applied to ensure the stratified split is consistent and reproducible across different environments.
+4.  **Transformation Pipeline**: Post-splitting, separate augmentation pipelines were applied: heavy augmentations (flips, crops, rotations) for the training set to prevent overfitting, and standardized resizing/normalization for the validation set to ensure accurate performance metrics.
+
 ---
 
 ## 1. Diseased Leaf Prediction
