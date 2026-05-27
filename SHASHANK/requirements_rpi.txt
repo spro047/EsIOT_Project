@@ -1,0 +1,17 @@
+# Raspberry Pi 5 dependencies for TFLite inference
+# Install on RPi5 with: pip install -r requirements_rpi.txt
+
+# Core TFLite runtime (lightweight, no full TensorFlow needed)
+tflite-runtime>=2.14.0
+
+# Image processing
+Pillow>=10.0.0
+
+# Numerical operations
+numpy>=1.24.0
+
+# Camera support (optional - for live inference)
+# picamera2>=0.3.0
+
+# GPIO (optional - for hardware integration)
+# RPi.GPIO>=0.7.0
