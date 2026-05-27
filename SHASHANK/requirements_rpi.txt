@@ -1,8 +1,11 @@
-# Raspberry Pi 5 dependencies for TFLite inference
+# Raspberry Pi 5 dependencies for inference
 # Install on RPi5 with: pip install -r requirements_rpi.txt
 
-# Core TFLite runtime (lightweight, no full TensorFlow needed)
-tflite-runtime>=2.14.0
+# ONNX Runtime (works on ARM, fast inference)
+onnxruntime>=1.17.0
+
+# TFLite runtime (alternative to ONNX Runtime)
+# tflite-runtime>=2.14.0
 
 # Image processing
 Pillow>=10.0.0
