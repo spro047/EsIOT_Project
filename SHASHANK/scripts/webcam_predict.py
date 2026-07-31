@@ -1,16 +1,15 @@
-import torch
-import torch.nn as nn
-from torchvision import models, transforms
+import os
+import tensorflow as tf
+from tensorflow import keras
 import cv2
 import numpy as np
 from PIL import Image
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f"Using device: {device}")
+print(f"TensorFlow version: {tf.__version__}")
 
 CLASS_NAMES = [
     'Apple___Apple_scab', 'Apple___Black_rot', 'Apple___Cedar_apple_rust', 'Apple___healthy',
-    'Background_without_leaves', 'Blueberry___healthy', 'Cherry___Powdery_mildew', 'Cherry___healthy',
+    'Blueberry___healthy', 'Cherry___Powdery_mildew', 'Cherry___healthy',
     'Corn___Cercospora_leaf_spot Gray_leaf_spot', 'Corn___Common_rust', 'Corn___Northern_Leaf_Blight',
     'Corn___healthy', 'Grape___Black_rot', 'Grape___Esca_(Black_Measles)',
     'Grape___Leaf_blight_(Isariopsis_Leaf_Spot)', 'Grape___healthy', 'Orange___Haunglongbing_(Citrus_greening)',
@@ -21,38 +20,11 @@ CLASS_NAMES = [
     'Tomato___Septoria_leaf_spot', 'Tomato___Spider_mites Two-spotted_spider_mite', 'Tomato___Target_Spot',
     'Tomato___Tomato_Yellow_Leaf_Curl_Virus', 'Tomato___Tomato_mosaic_virus', 'Tomato___healthy'
 ]
-NUM_CLASSES = len(CLASS_NAMES)
+IMG_SIZE = (224, 224)
 
-class PlantDiseaseModel(nn.Module):
-    def __init__(self, num_classes):
-        super(PlantDiseaseModel, self).__init__()
-        self.base_model = models.mobilenet_v2(weights=None)
-        self.base_model.classifier = nn.Sequential(
-            nn.Dropout(p=0.3),
-            nn.Linear(1280, 256),
-            nn.ReLU(),
-            nn.BatchNorm1d(256),
-            nn.Dropout(p=0.3),
-            nn.Linear(256, num_classes)
-        )
-
-    def forward(self, x):
-        return self.base_model(x)
-
-model = PlantDiseaseModel(NUM_CLASSES)
-model.load_state_dict(torch.load(
-    r"D:\Esiot_project\SHASHANK\cnn_mobilenet_pytorch_final.pt",
-    map_location=device
-))
-model.to(device)
-model.eval()
+MODEL_PATH = os.path.join(os.path.dirname(__file__), '..', 'models', 'cnn_mobilenet_tf_final.keras')
+model = keras.models.load_model(MODEL_PATH)
 print("Model loaded successfully!")
-
-inference_transforms = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor(),
-    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-])
 
 print("\nOpening webcam...")
 print("Instructions:")
@@ -61,7 +33,6 @@ print("  - Press 'q' to quit without predicting")
 print()
 
 cap = cv2.VideoCapture(0)
-
 if not cap.isOpened():
     print("Error: Could not open webcam.")
     exit()
@@ -94,18 +65,18 @@ if captured_frame is None:
 
 print("\n--- Making Prediction ---")
 rgb_frame = cv2.cvtColor(captured_frame, cv2.COLOR_BGR2RGB)
-pil_image = Image.fromarray(rgb_frame)
+pil_image = Image.fromarray(rgb_frame).resize(IMG_SIZE)
+img_array = np.expand_dims(np.array(pil_image, dtype=np.float32), axis=0)
 
-input_tensor = inference_transforms(pil_image).unsqueeze(0).to(device)
+probs = model.predict(img_array, verbose=0)[0]
+pred_idx = int(np.argmax(probs))
+conf = float(probs[pred_idx])
 
-with torch.no_grad():
-    outputs = model(input_tensor)
-    probabilities = torch.nn.functional.softmax(outputs[0], dim=0)
-    confidence, pred_idx = torch.max(probabilities, dim=0)
-
-label = CLASS_NAMES[pred_idx.item()]
-conf = confidence.item()
-
+CONFIDENCE_THRESHOLD = 0.3
+if conf < CONFIDENCE_THRESHOLD:
+    label = "Low_Confidence___No_leaf_detected"
+else:
+    label = CLASS_NAMES[pred_idx]
 species = label.split("___")[0]
 condition = label.split("___")[1] if "___" in label else ""
 

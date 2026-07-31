@@ -1,83 +1,38 @@
-import torch
-import torch.nn as nn
-from torchvision import models, transforms
+import os
+import tensorflow as tf
+from tensorflow import keras
+import numpy as np
 from PIL import Image
 
-# -------------------------------
-# MODEL CLASS
-# -------------------------------
-class PlantDiseaseModel(nn.Module):
-    def __init__(self, num_classes):
-        super(PlantDiseaseModel, self).__init__()
+CLASS_NAMES = [
+    'Apple___Apple_scab', 'Apple___Black_rot', 'Apple___Cedar_apple_rust', 'Apple___healthy',
+    'Blueberry___healthy', 'Cherry___Powdery_mildew', 'Cherry___healthy',
+    'Corn___Cercospora_leaf_spot Gray_leaf_spot', 'Corn___Common_rust', 'Corn___Northern_Leaf_Blight',
+    'Corn___healthy', 'Grape___Black_rot', 'Grape___Esca_(Black_Measles)',
+    'Grape___Leaf_blight_(Isariopsis_Leaf_Spot)', 'Grape___healthy', 'Orange___Haunglongbing_(Citrus_greening)',
+    'Peach___Bacterial_spot', 'Peach___healthy', 'Pepper,_bell___Bacterial_spot', 'Pepper,_bell___healthy',
+    'Potato___Early_blight', 'Potato___Late_blight', 'Potato___healthy', 'Raspberry___healthy',
+    'Soybean___healthy', 'Squash___Powdery_mildew', 'Strawberry___Leaf_scorch', 'Strawberry___healthy',
+    'Tomato___Bacterial_spot', 'Tomato___Early_blight', 'Tomato___Late_blight', 'Tomato___Leaf_Mold',
+    'Tomato___Septoria_leaf_spot', 'Tomato___Spider_mites Two-spotted_spider_mite', 'Tomato___Target_Spot',
+    'Tomato___Tomato_Yellow_Leaf_Curl_Virus', 'Tomato___Tomato_mosaic_virus', 'Tomato___healthy'
+]
+IMG_SIZE = (224, 224)
 
-        self.base_model = models.mobilenet_v2(weights=None)
-
-        # Freeze feature extractor
-        for param in self.base_model.parameters():
-            param.requires_grad = False
-
-        # Custom classifier
-        self.base_model.classifier = nn.Sequential(
-            nn.Dropout(p=0.3),
-            nn.Linear(1280, 256),
-            nn.ReLU(),
-            nn.BatchNorm1d(256),
-            nn.Dropout(p=0.3),
-            nn.Linear(256, num_classes)
-        )
-
-    def forward(self, x):
-        return self.base_model(x)
-
-# -------------------------------
-# CREATE MODEL
-# -------------------------------
-NUM_CLASSES = 39
-
-model = PlantDiseaseModel(num_classes=NUM_CLASSES)
-
-# -------------------------------
-# LOAD SAVED WEIGHTS
-# -------------------------------
-model.load_state_dict(
-    torch.load(
-        r"D:\Esiot_project\SHASHANK\cnn_mobilenet_pytorch_final.pt",
-        map_location=torch.device('cpu')
-    )
-)
-
-model.eval()
-
+MODEL_PATH = os.path.join(os.path.dirname(__file__), '..', 'SHASHANK', 'models', 'cnn_mobilenet_tf_final.keras')
+model = keras.models.load_model(MODEL_PATH)
 print("Plant model loaded successfully")
 
-# -------------------------------
-# IMAGE TRANSFORM
-# -------------------------------
-IMAGE_SIZE = 224
+image_path = os.path.join(os.path.dirname(__file__), '..', 'DATASET', 'Original', 'Apple___Black_rot', 'image (3).JPG')
+img = Image.open(image_path).convert('RGB').resize(IMG_SIZE)
+img_array = np.expand_dims(np.array(img, dtype=np.float32), axis=0)
 
-transform = transforms.Compose([
-    transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
-    transforms.ToTensor(),
-    transforms.Normalize(
-        [0.485, 0.456, 0.406],
-        [0.229, 0.224, 0.225]
-    )
-])
+probs = model.predict(img_array, verbose=0)[0]
+predicted_class = int(np.argmax(probs))
+conf = float(probs[predicted_class])
 
-# -------------------------------
-# LOAD TEST IMAGE
-# -------------------------------
-image = Image.open(r"D:\Esiot_project\DATASET\Original\Apple___Black_rot\image (3).JPG").convert("RGB")
-
-# Preprocess image
-input_tensor = transform(image).unsqueeze(0)
-
-# -------------------------------
-# PREDICTION
-# -------------------------------
-with torch.no_grad():
-    output = model(input_tensor)
-
-    predicted_class = torch.argmax(output, dim=1)
-
-print("Predicted Disease:", class_names[predicted_class.item()])
+CONFIDENCE_THRESHOLD = 0.3
+if conf < CONFIDENCE_THRESHOLD:
+    print("Predicted Disease: Low_Confidence___No_leaf_detected")
+else:
+    print("Predicted Disease:", CLASS_NAMES[predicted_class])

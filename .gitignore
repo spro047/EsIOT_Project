@@ -2,6 +2,7 @@ DATASET/
 *.pt
 *.pth
 *.keras
+*.tflite
 *.h5
 *.weights
 __pycache__/
@@ -9,3 +10,6 @@ __pycache__/
 .gemini/
 .vscode/
 *.log
+.venv_tf/
+.venv/
+.opencode/
